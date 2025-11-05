@@ -14,8 +14,8 @@ import (
 
 // DataHandler обрабатывает запросы для работы с данными.
 type DataHandler struct {
-	dataRepo      *repository.DataRepository
-	userRepo      *repository.UserRepository
+	dataRepo      repository.DataRepositoryInterface
+	userRepo      repository.UserRepositoryInterface
 	encryptionKey string
 }
 
@@ -262,5 +262,5 @@ func (dh *DataHandler) DeleteData(c *gin.Context) {
 		return
 	}
 
-	c.Status(http.StatusNoContent)
+	c.Data(http.StatusNoContent, "application/json", nil)
 }

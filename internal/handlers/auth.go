@@ -12,7 +12,7 @@ import (
 
 // AuthHandler обрабатывает запросы аутентификации.
 type AuthHandler struct {
-	userRepo  *repository.UserRepository
+	userRepo  repository.UserRepositoryInterface
 	jwtSecret string
 }
 

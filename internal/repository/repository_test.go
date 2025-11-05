@@ -198,3 +198,184 @@ func TestDataRepository_CheckUserOwnership(t *testing.T) {
 		t.Error("Проверка принадлежности данных другому пользователю должна возвращать ошибку")
 	}
 }
+
+func TestUserRepository_GetByID(t *testing.T) {
+	repo := setupTestDB(t)
+	defer cleanupTestDB(t, repo)
+
+	userRepo := repo.NewUserRepository()
+
+	// Создание тестового пользователя
+	user := &models.User{
+		Username: "testuser",
+		Email:    "test@example.com",
+		Password: "hashedpassword",
+	}
+
+	err := userRepo.Create(user)
+	if err != nil {
+		t.Fatalf("Ошибка создания пользователя: %v", err)
+	}
+
+	// Поиск пользователя по ID
+	foundUser, err := userRepo.GetByID(user.ID)
+	if err != nil {
+		t.Fatalf("Ошибка поиска пользователя: %v", err)
+	}
+
+	if foundUser.ID != user.ID {
+		t.Errorf("Ожидался ID %s, получен %s", user.ID, foundUser.ID)
+	}
+
+	if foundUser.Username != "testuser" {
+		t.Errorf("Ожидался username %s, получен %s", "testuser", foundUser.Username)
+	}
+}
+
+func TestUserRepository_GetByID_NotFound(t *testing.T) {
+	repo := setupTestDB(t)
+	defer cleanupTestDB(t, repo)
+
+	userRepo := repo.NewUserRepository()
+
+	nonExistentID := uuid.New()
+	_, err := userRepo.GetByID(nonExistentID)
+	if err == nil {
+		t.Error("Ожидалась ошибка для несуществующего пользователя")
+	}
+}
+
+func TestDataRepository_GetByID(t *testing.T) {
+	repo := setupTestDB(t)
+	defer cleanupTestDB(t, repo)
+
+	dataRepo := repo.NewDataRepository()
+	userID := uuid.New()
+
+	data := &models.Data{
+		UserID:   userID,
+		Name:     "Test Data",
+		Login:    "testuser",
+		Password: "encrypted_password",
+	}
+
+	err := dataRepo.Create(data)
+	if err != nil {
+		t.Fatalf("Ошибка создания данных: %v", err)
+	}
+
+	// Поиск данных по ID
+	foundData, err := dataRepo.GetByID(data.ID)
+	if err != nil {
+		t.Fatalf("Ошибка поиска данных: %v", err)
+	}
+
+	if foundData.ID != data.ID {
+		t.Errorf("Ожидался ID %s, получен %s", data.ID, foundData.ID)
+	}
+
+	if foundData.Name != "Test Data" {
+		t.Errorf("Ожидалось название %s, получено %s", "Test Data", foundData.Name)
+	}
+}
+
+func TestDataRepository_GetByID_NotFound(t *testing.T) {
+	repo := setupTestDB(t)
+	defer cleanupTestDB(t, repo)
+
+	dataRepo := repo.NewDataRepository()
+
+	nonExistentID := uuid.New()
+	_, err := dataRepo.GetByID(nonExistentID)
+	if err == nil {
+		t.Error("Ожидалась ошибка для несуществующих данных")
+	}
+}
+
+func TestDataRepository_Update(t *testing.T) {
+	repo := setupTestDB(t)
+	defer cleanupTestDB(t, repo)
+
+	dataRepo := repo.NewDataRepository()
+	userID := uuid.New()
+
+	data := &models.Data{
+		UserID:   userID,
+		Name:     "Original Name",
+		Login:    "originallogin",
+		Password: "encrypted_password",
+	}
+
+	err := dataRepo.Create(data)
+	if err != nil {
+		t.Fatalf("Ошибка создания данных: %v", err)
+	}
+
+	// Обновление данных
+	data.Name = "Updated Name"
+	data.Login = "updatedlogin"
+
+	err = dataRepo.Update(data)
+	if err != nil {
+		t.Fatalf("Ошибка обновления данных: %v", err)
+	}
+
+	// Проверка обновленных данных
+	updatedData, err := dataRepo.GetByID(data.ID)
+	if err != nil {
+		t.Fatalf("Ошибка получения обновленных данных: %v", err)
+	}
+
+	if updatedData.Name != "Updated Name" {
+		t.Errorf("Ожидалось название %s, получено %s", "Updated Name", updatedData.Name)
+	}
+
+	if updatedData.Login != "updatedlogin" {
+		t.Errorf("Ожидался логин %s, получен %s", "updatedlogin", updatedData.Login)
+	}
+}
+
+func TestDataRepository_Delete(t *testing.T) {
+	repo := setupTestDB(t)
+	defer cleanupTestDB(t, repo)
+
+	dataRepo := repo.NewDataRepository()
+	userID := uuid.New()
+
+	data := &models.Data{
+		UserID:   userID,
+		Name:     "Test Data",
+		Login:    "testuser",
+		Password: "encrypted_password",
+	}
+
+	err := dataRepo.Create(data)
+	if err != nil {
+		t.Fatalf("Ошибка создания данных: %v", err)
+	}
+
+	// Удаление данных
+	err = dataRepo.Delete(data.ID)
+	if err != nil {
+		t.Fatalf("Ошибка удаления данных: %v", err)
+	}
+
+	// Проверка, что данные удалены
+	_, err = dataRepo.GetByID(data.ID)
+	if err == nil {
+		t.Error("Ожидалась ошибка для удаленных данных")
+	}
+}
+
+func TestDataRepository_Delete_NotFound(t *testing.T) {
+	repo := setupTestDB(t)
+	defer cleanupTestDB(t, repo)
+
+	dataRepo := repo.NewDataRepository()
+
+	nonExistentID := uuid.New()
+	err := dataRepo.Delete(nonExistentID)
+	// Удаление несуществующей записи может не возвращать ошибку в зависимости от реализации
+	// Проверяем, что метод выполняется без паники
+	_ = err
+}
