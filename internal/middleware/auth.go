@@ -2,7 +2,6 @@
 package middleware
 
 import (
-	"context"
 	"net/http"
 	"strings"
 
@@ -33,7 +32,7 @@ func AuthMiddleware(secretKey string) gin.HandlerFunc {
 
 		claims, err := jwtManager.ValidateToken(token)
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Неверный токен: " + err.Error()})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Неверный токен"})
 			c.Abort()
 			return
 		}
@@ -74,22 +73,4 @@ func GetClaims(c *gin.Context) (*auth.Claims, bool) {
 	}
 	claimsObj, ok := claims.(*auth.Claims)
 	return claimsObj, ok
-}
-
-// GetUserIDFromContext извлекает ID пользователя из контекста (для обратной совместимости).
-func GetUserIDFromContext(ctx context.Context) (string, bool) {
-	userID, ok := ctx.Value("user_id").(string)
-	return userID, ok
-}
-
-// GetUsernameFromContext извлекает имя пользователя из контекста (для обратной совместимости).
-func GetUsernameFromContext(ctx context.Context) (string, bool) {
-	username, ok := ctx.Value("username").(string)
-	return username, ok
-}
-
-// GetClaimsFromContext извлекает claims из контекста (для обратной совместимости).
-func GetClaimsFromContext(ctx context.Context) (*auth.Claims, bool) {
-	claims, ok := ctx.Value("claims").(*auth.Claims)
-	return claims, ok
 }

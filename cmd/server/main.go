@@ -43,7 +43,6 @@ func main() {
 			logger.Logger.Fatal("Ошибка запуска сервера",
 				zap.Error(err),
 			)
-			os.Exit(1)
 		}
 	case <-ctx.Done():
 		logger.Logger.Info("Получен сигнал о завершении работы")

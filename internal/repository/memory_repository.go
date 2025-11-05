@@ -172,14 +172,6 @@ func (mdr *MemoryDataRepository) Delete(id uuid.UUID) error {
 	return nil
 }
 
-// Deprecated: версия больше не используется
-func (mdr *MemoryDataRepository) GetLatestVersion(userID uuid.UUID) (int, error) { return 0, nil }
-
-// Deprecated: версия больше не используется
-func (mdr *MemoryDataRepository) GetUpdatedSince(userID uuid.UUID, version int) ([]models.Data, error) {
-	return []models.Data{}, nil
-}
-
 // CheckUserOwnership проверяет, принадлежат ли данные пользователю.
 func (mdr *MemoryDataRepository) CheckUserOwnership(dataID, userID uuid.UUID) error {
 	mdr.repo.mutex.RLock()

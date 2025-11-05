@@ -178,7 +178,9 @@ func (c *Client) register(username, email, password string) {
 
 		if err := json.NewDecoder(resp.Body).Decode(&authResp); err == nil {
 			c.token = authResp.Token
-			c.saveToken()
+			if err := c.saveToken(); err != nil {
+				fmt.Printf("Предупреждение: не удалось сохранить токен: %v\n", err)
+			}
 			fmt.Printf("Успешная регистрация! Добро пожаловать, %s!\n", authResp.User.Username)
 		}
 	} else {
@@ -213,7 +215,9 @@ func (c *Client) login(username, password string) {
 
 		if err := json.NewDecoder(resp.Body).Decode(&authResp); err == nil {
 			c.token = authResp.Token
-			c.saveToken()
+			if err := c.saveToken(); err != nil {
+				fmt.Printf("Предупреждение: не удалось сохранить токен: %v\n", err)
+			}
 			fmt.Printf("Успешный вход! Добро пожаловать, %s!\n", authResp.User.Username)
 		}
 	} else {
@@ -225,7 +229,9 @@ func (c *Client) login(username, password string) {
 // logout выполняет выход пользователя.
 func (c *Client) logout() {
 	c.token = ""
-	c.saveToken()
+	if err := c.saveToken(); err != nil {
+		fmt.Printf("Предупреждение: не удалось сохранить токен: %v\n", err)
+	}
 	fmt.Println("Выход выполнен успешно")
 }
 
@@ -353,13 +359,17 @@ func (c *Client) makeRequest(method, path string, body interface{}) (*http.Respo
 }
 
 // saveToken сохраняет токен в файл.
-func (c *Client) saveToken() {
+func (c *Client) saveToken() error {
 	if err := os.MkdirAll(c.configPath, 0755); err != nil {
-		return
+		return fmt.Errorf("не удалось создать директорию конфигурации: %w", err)
 	}
 
 	tokenFile := filepath.Join(c.configPath, "token")
-	os.WriteFile(tokenFile, []byte(c.token), 0600)
+	if err := os.WriteFile(tokenFile, []byte(c.token), 0600); err != nil {
+		return fmt.Errorf("не удалось сохранить токен: %w", err)
+	}
+
+	return nil
 }
 
 // loadToken загружает токен из файла.

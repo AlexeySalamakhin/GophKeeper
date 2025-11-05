@@ -186,7 +186,7 @@ func (dh *DataHandler) UpdateData(c *gin.Context) {
 	}
 
 	if err := dh.dataRepo.CheckUserOwnership(dataID, userUUID); err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Данные не найдены"})
+		c.JSON(http.StatusForbidden, gin.H{"error": "Данные не найдены"})
 		return
 	}
 
@@ -253,7 +253,7 @@ func (dh *DataHandler) DeleteData(c *gin.Context) {
 	}
 
 	if err := dh.dataRepo.CheckUserOwnership(dataID, userUUID); err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Данные не найдены"})
+		c.JSON(http.StatusForbidden, gin.H{"error": "Данные не найдены"})
 		return
 	}
 

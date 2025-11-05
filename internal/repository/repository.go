@@ -117,16 +117,6 @@ func (dr *DataRepository) Delete(id uuid.UUID) error {
 	return dr.db.Delete(&models.Data{}, id).Error
 }
 
-// GetLatestVersion возвращает последнюю версию данных.
-func (dr *DataRepository) GetLatestVersion(userID uuid.UUID) (int, error) {
-	return 0, nil
-}
-
-// GetUpdatedSince возвращает данные, обновленные после указанной версии.
-func (dr *DataRepository) GetUpdatedSince(userID uuid.UUID, version int) ([]models.Data, error) {
-	return []models.Data{}, nil
-}
-
 // CheckUserOwnership проверяет, принадлежат ли данные пользователю.
 func (dr *DataRepository) CheckUserOwnership(dataID, userID uuid.UUID) error {
 	var count int64
