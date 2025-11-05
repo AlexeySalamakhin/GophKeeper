@@ -53,12 +53,7 @@ func Load() *Config {
 	viper.SetDefault("server.port", "8080")
 	viper.SetDefault("database.host", "localhost")
 	viper.SetDefault("database.port", 5432)
-	viper.SetDefault("database.user", "gophkeeper")
-	viper.SetDefault("database.password", "password")
-	viper.SetDefault("database.dbname", "gophkeeper")
 	viper.SetDefault("database.sslmode", "disable")
-	viper.SetDefault("jwt.secret", "your-secret-key-change-in-production")
-	viper.SetDefault("crypto.key", "your-encryption-key-change-in-production")
 
 	viper.AutomaticEnv()
 
@@ -90,5 +85,30 @@ func Load() *Config {
 		panic("Ошибка парсинга конфигурации: " + err.Error())
 	}
 
+	// Валидация критичных полей безопасности
+	validateConfig(&config)
+
 	return &config
+}
+
+func validateConfig(cfg *Config) {
+	if cfg.JWT.Secret == "" {
+		log.Fatalf("КРИТИЧЕСКАЯ ОШИБКА: JWT_SECRET не установлен.")
+	}
+
+	if cfg.Crypto.Key == "" {
+		log.Fatalf("КРИТИЧЕСКАЯ ОШИБКА: CRYPTO_KEY не установлен.")
+	}
+
+	if cfg.Database.DBName == "" {
+		log.Fatalf("КРИТИЧЕСКАЯ ОШИБКА: DB_NAME не установлен.")
+	}
+
+	if cfg.Database.User == "" {
+		log.Fatalf("КРИТИЧЕСКАЯ ОШИБКА: DB_USER не установлен.")
+	}
+
+	if cfg.Database.Password == "" {
+		log.Fatalf("КРИТИЧЕСКАЯ ОШИБКА: DB_PASSWORD не установлен.")
+	}
 }

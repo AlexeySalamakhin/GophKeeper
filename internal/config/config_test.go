@@ -17,6 +17,7 @@ func TestConfig_Load_DefaultValues(t *testing.T) {
 	originalDBName := os.Getenv("DB_NAME")
 	originalDBSSLMode := os.Getenv("DB_SSLMODE")
 	originalJWTSecret := os.Getenv("JWT_SECRET")
+	originalCryptoKey := os.Getenv("CRYPTO_KEY")
 
 	// Очистка переменных окружения для теста
 	os.Unsetenv("SERVER_HOST")
@@ -28,6 +29,14 @@ func TestConfig_Load_DefaultValues(t *testing.T) {
 	os.Unsetenv("DB_NAME")
 	os.Unsetenv("DB_SSLMODE")
 	os.Unsetenv("JWT_SECRET")
+	os.Unsetenv("CRYPTO_KEY")
+
+	os.Setenv("JWT_SECRET", "test-jwt-secret")
+	os.Setenv("CRYPTO_KEY", "test-crypto-key")
+	os.Setenv("DB_NAME", "test-db")
+	os.Setenv("DB_USER", "test-user")
+	os.Setenv("DB_PASSWORD", "test-password")
+	os.Setenv("DB_SSLMODE", "test-sslmode")
 
 	// Восстановление переменных окружения после теста
 	defer func() {
@@ -58,6 +67,9 @@ func TestConfig_Load_DefaultValues(t *testing.T) {
 		if originalJWTSecret != "" {
 			os.Setenv("JWT_SECRET", originalJWTSecret)
 		}
+		if originalCryptoKey != "" {
+			os.Setenv("CRYPTO_KEY", originalCryptoKey)
+		}
 	}()
 
 	config := Load()
@@ -79,12 +91,16 @@ func TestConfig_Load_DefaultValues(t *testing.T) {
 		t.Errorf("Ожидался database port 5432, получен %d", config.Database.Port)
 	}
 
-	if config.Database.User != "gophkeeper" {
-		t.Errorf("Ожидался database user 'gophkeeper', получен '%s'", config.Database.User)
+	if config.Database.User != "test-user" {
+		t.Errorf("Ожидался database user 'test-user', получен '%s'", config.Database.User)
 	}
 
 	if config.JWT.Secret == "" {
 		t.Error("JWT Secret не должен быть пустым")
+	}
+
+	if config.Crypto.Key == "" {
+		t.Error("Crypto Key не должен быть пустым")
 	}
 }
 
@@ -99,6 +115,7 @@ func TestConfig_Load_EnvironmentVariables(t *testing.T) {
 	os.Setenv("DB_NAME", "test-db")
 	os.Setenv("DB_SSLMODE", "require")
 	os.Setenv("JWT_SECRET", "test-secret")
+	os.Setenv("CRYPTO_KEY", "test-crypto-key")
 
 	// Восстановление после теста
 	defer func() {
@@ -111,6 +128,7 @@ func TestConfig_Load_EnvironmentVariables(t *testing.T) {
 		os.Unsetenv("DB_NAME")
 		os.Unsetenv("DB_SSLMODE")
 		os.Unsetenv("JWT_SECRET")
+		os.Unsetenv("CRYPTO_KEY")
 	}()
 
 	config := Load()
@@ -135,6 +153,10 @@ func TestConfig_Load_EnvironmentVariables(t *testing.T) {
 	if config.JWT.Secret != "test-secret" {
 		t.Errorf("Ожидался JWT secret 'test-secret', получен '%s'", config.JWT.Secret)
 	}
+
+	if config.Crypto.Key != "test-crypto-key" {
+		t.Errorf("Ожидался crypto key 'test-crypto-key', получен '%s'", config.Crypto.Key)
+	}
 }
 
 func TestConfig_Load_ConfigFile(t *testing.T) {
@@ -152,6 +174,8 @@ database:
   sslmode: "require"
 jwt:
   secret: "file-secret"
+crypto:
+  key: "file-crypto-key"
 `
 
 	configFile := "test_config.yaml"
@@ -188,5 +212,9 @@ jwt:
 
 	if config.JWT.Secret != "file-secret" {
 		t.Errorf("Ожидался JWT secret 'file-secret', получен '%s'", config.JWT.Secret)
+	}
+
+	if config.Crypto.Key != "file-crypto-key" {
+		t.Errorf("Ожидался crypto key 'file-crypto-key', получен '%s'", config.Crypto.Key)
 	}
 }
