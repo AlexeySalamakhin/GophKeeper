@@ -164,6 +164,7 @@ func (c *Client) register(username, email, password string) {
 		fmt.Printf("Ошибка регистрации: %v\n", err)
 		return
 	}
+	defer resp.Body.Close()
 
 	if resp.StatusCode == http.StatusOK || resp.StatusCode == http.StatusCreated {
 		var authResp struct {
@@ -198,6 +199,7 @@ func (c *Client) login(username, password string) {
 		fmt.Printf("Ошибка входа: %v\n", err)
 		return
 	}
+	defer resp.Body.Close()
 
 	if resp.StatusCode == http.StatusOK {
 		var authResp struct {
@@ -239,6 +241,7 @@ func (c *Client) listData() {
 		fmt.Printf("Ошибка получения данных: %v\n", err)
 		return
 	}
+	defer resp.Body.Close()
 
 	if resp.StatusCode == http.StatusOK {
 		var data []map[string]interface{}
@@ -287,6 +290,7 @@ func (c *Client) addData(name, login, password, metadata string) {
 		fmt.Printf("Ошибка добавления данных: %v\n", err)
 		return
 	}
+	defer resp.Body.Close()
 
 	if resp.StatusCode == http.StatusCreated || resp.StatusCode == http.StatusOK {
 		fmt.Println("Данные успешно добавлены")
@@ -308,6 +312,7 @@ func (c *Client) getData(id string) {
 		fmt.Printf("Ошибка получения данных: %v\n", err)
 		return
 	}
+	defer resp.Body.Close()
 
 	if resp.StatusCode == http.StatusOK {
 		var data map[string]interface{}

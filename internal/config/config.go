@@ -2,9 +2,9 @@
 package config
 
 import (
-	"log"
 	"os"
 
+	"github.com/AlexeySalamakhin/GophKeeper/internal/logger"
 	"github.com/joho/godotenv"
 	"github.com/spf13/viper"
 )
@@ -46,7 +46,10 @@ type CryptoConfig struct {
 // Load загружает конфигурацию из переменных окружения и файлов.
 func Load() *Config {
 	if err := godotenv.Load(); err != nil {
-		log.Println("Файл .env не найден, используются системные переменные окружения")
+		// Используем fallback на стандартный вывод, если logger еще не инициализирован
+		if logger.Logger != nil {
+			logger.Logger.Info("Файл .env не найден, используются системные переменные окружения")
+		}
 	}
 
 	viper.SetDefault("server.host", "localhost")
@@ -93,22 +96,42 @@ func Load() *Config {
 
 func validateConfig(cfg *Config) {
 	if cfg.JWT.Secret == "" {
-		log.Fatalf("КРИТИЧЕСКАЯ ОШИБКА: JWT_SECRET не установлен.")
+		if logger.Logger != nil {
+			logger.Logger.Fatal("КРИТИЧЕСКАЯ ОШИБКА: JWT_SECRET не установлен")
+		} else {
+			panic("КРИТИЧЕСКАЯ ОШИБКА: JWT_SECRET не установлен")
+		}
 	}
 
 	if cfg.Crypto.Key == "" {
-		log.Fatalf("КРИТИЧЕСКАЯ ОШИБКА: CRYPTO_KEY не установлен.")
+		if logger.Logger != nil {
+			logger.Logger.Fatal("КРИТИЧЕСКАЯ ОШИБКА: CRYPTO_KEY не установлен")
+		} else {
+			panic("КРИТИЧЕСКАЯ ОШИБКА: CRYPTO_KEY не установлен")
+		}
 	}
 
 	if cfg.Database.DBName == "" {
-		log.Fatalf("КРИТИЧЕСКАЯ ОШИБКА: DB_NAME не установлен.")
+		if logger.Logger != nil {
+			logger.Logger.Fatal("КРИТИЧЕСКАЯ ОШИБКА: DB_NAME не установлен")
+		} else {
+			panic("КРИТИЧЕСКАЯ ОШИБКА: DB_NAME не установлен")
+		}
 	}
 
 	if cfg.Database.User == "" {
-		log.Fatalf("КРИТИЧЕСКАЯ ОШИБКА: DB_USER не установлен.")
+		if logger.Logger != nil {
+			logger.Logger.Fatal("КРИТИЧЕСКАЯ ОШИБКА: DB_USER не установлен")
+		} else {
+			panic("КРИТИЧЕСКАЯ ОШИБКА: DB_USER не установлен")
+		}
 	}
 
 	if cfg.Database.Password == "" {
-		log.Fatalf("КРИТИЧЕСКАЯ ОШИБКА: DB_PASSWORD не установлен.")
+		if logger.Logger != nil {
+			logger.Logger.Fatal("КРИТИЧЕСКАЯ ОШИБКА: DB_PASSWORD не установлен")
+		} else {
+			panic("КРИТИЧЕСКАЯ ОШИБКА: DB_PASSWORD не установлен")
+		}
 	}
 }

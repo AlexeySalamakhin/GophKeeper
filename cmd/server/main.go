@@ -2,24 +2,32 @@
 package main
 
 import (
-	"log"
 	"os"
 
+	"github.com/AlexeySalamakhin/GophKeeper/internal/logger"
 	"github.com/AlexeySalamakhin/GophKeeper/internal/server"
 	"github.com/spf13/viper"
+	"go.uber.org/zap"
 )
 
 func main() {
-	viper.SetDefault("server.port", "8080")
-	viper.SetDefault("server.host", "localhost")
-	viper.SetDefault("database.path", "gophkeeper.db")
-	viper.SetDefault("jwt.secret", "your-secret-key")
+	logLevel := os.Getenv("LOG_LEVEL")
+	if logLevel == "" {
+		logLevel = "info"
+	}
+
+	if err := logger.Init(logLevel); err != nil {
+		panic("Ошибка инициализации логгера: " + err.Error())
+	}
+	defer logger.Sync()
 
 	viper.AutomaticEnv()
 
 	srv := server.New()
 	if err := srv.Run(); err != nil {
-		log.Fatalf("Ошибка запуска сервера: %v", err)
+		logger.Logger.Fatal("Ошибка запуска сервера",
+			zap.Error(err),
+		)
 		os.Exit(1)
 	}
 }

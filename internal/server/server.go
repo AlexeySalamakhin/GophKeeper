@@ -4,7 +4,6 @@ package server
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -13,10 +12,12 @@ import (
 
 	"github.com/AlexeySalamakhin/GophKeeper/internal/config"
 	"github.com/AlexeySalamakhin/GophKeeper/internal/handlers"
+	"github.com/AlexeySalamakhin/GophKeeper/internal/logger"
 	"github.com/AlexeySalamakhin/GophKeeper/internal/middleware"
 	"github.com/AlexeySalamakhin/GophKeeper/internal/repository"
 	"github.com/gin-gonic/gin"
-	_ "github.com/lib/pq"
+	_ "github.com/jackc/pgx"
+	"go.uber.org/zap"
 )
 
 // Server представляет HTTP сервер приложения.
@@ -46,8 +47,8 @@ func New() *Server {
 	// Настройка Gin роутера
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
-	router.Use(gin.Logger())
-	router.Use(gin.Recovery())
+	router.Use(logger.GinLoggerMiddleware())
+	router.Use(logger.GinRecoveryMiddleware())
 
 	return &Server{
 		config: cfg,
@@ -69,9 +70,13 @@ func (s *Server) Run() error {
 	}
 
 	go func() {
-		log.Printf("Сервер запущен на %s", s.httpServer.Addr)
+		logger.Logger.Info("Сервер запущен",
+			zap.String("address", s.httpServer.Addr),
+		)
 		if err := s.httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("Ошибка запуска сервера: %v", err)
+			logger.Logger.Fatal("Ошибка запуска сервера",
+				zap.Error(err),
+			)
 		}
 	}()
 
@@ -79,7 +84,7 @@ func (s *Server) Run() error {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
-	log.Println("Завершение работы сервера...")
+	logger.Logger.Info("Завершение работы сервера...")
 
 	// Graceful shutdown
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
