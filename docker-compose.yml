@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: gophkeeper-postgres
+    environment:
+      POSTGRES_USER: gophkeeper
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: gophkeeper
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
