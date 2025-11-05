@@ -4,10 +4,8 @@ package server
 import (
 	"context"
 	"fmt"
+	"net"
 	"net/http"
-	"os"
-	"os/signal"
-	"syscall"
 	"time"
 
 	"github.com/AlexeySalamakhin/GophKeeper/internal/config"
@@ -57,39 +55,37 @@ func New() *Server {
 	}
 }
 
-// Run запускает HTTP сервер.
-func (s *Server) Run() error {
+// Run запускает HTTP сервер в горутине и возвращает канал ошибок.
+func (s *Server) Run(ctx context.Context) <-chan error {
 	s.setupRoutes()
 
 	s.httpServer = &http.Server{
 		Addr:         fmt.Sprintf("%s:%s", s.config.Server.Host, s.config.Server.Port),
 		Handler:      s.router,
+		BaseContext:  func(_ net.Listener) context.Context { return ctx },
 		ReadTimeout:  15 * time.Second,
 		WriteTimeout: 15 * time.Second,
 		IdleTimeout:  60 * time.Second,
 	}
+
+	errChan := make(chan error, 1)
 
 	go func() {
 		logger.Logger.Info("Сервер запущен",
 			zap.String("address", s.httpServer.Addr),
 		)
 		if err := s.httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			logger.Logger.Fatal("Ошибка запуска сервера",
-				zap.Error(err),
-			)
+			errChan <- err
 		}
+		close(errChan)
 	}()
 
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-	<-quit
+	return errChan
+}
 
+// Shutdown выполняет graceful shutdown сервера.
+func (s *Server) Shutdown(ctx context.Context) error {
 	logger.Logger.Info("Завершение работы сервера...")
-
-	// Graceful shutdown
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
-
 	return s.httpServer.Shutdown(ctx)
 }
 
